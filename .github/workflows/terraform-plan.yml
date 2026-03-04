@@ -1,0 +1,33 @@
+name: AEO Data Platform CI/CD
+
+on:
+  pull_request:
+    branches: [ dev/** ]
+  workflow_dispatch:
+
+concurrency:
+  group: terraform-dev
+  cancel-in-progress: true
+
+jobs:
+  terraform-plan:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: '1.9.5'
+
+    - uses: ./.github/actions/gcp-auth
+      with:
+        credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+    - name: Terraform Plan DEV
+      working-directory: ./infra
+      env:
+        TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID_DEV }}
+        TF_VAR_env: dev
+      run: |
+        terraform init -backend-config=../environments/dev/backend.tf
+        terraform plan -var-file="../environments/dev/terraform.tfvars"

@@ -1,0 +1,15 @@
+name: "GCP auth"
+description: "Authenticate to Google Cloud via service account JSON"
+inputs:
+  credentials_json:
+    required: true
+    description: "Service account key JSON"
+  project_id:
+    required: false
+runs:
+  using: "composite"
+  steps:
+    - shell: bash
+      run: |
+        echo '${{ inputs.credentials_json }}' > "$HOME/gcp-sa.json"
+        echo "GOOGLE_APPLICATION_CREDENTIALS=$HOME/gcp-sa.json" >> "$GITHUB_ENV"

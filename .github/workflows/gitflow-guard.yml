@@ -1,0 +1,46 @@
+name: GitFlow Guard
+on:
+  pull_request:
+    branches: ['dev/**', 'release/**', 'main']
+    types: [opened, synchronize, reopened]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR source branch
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const source = context.payload.pull_request.head.ref;
+            const target = context.payload.pull_request.base.ref;
+            
+            console.log(`Validating PR: ${source} → ${target}`);
+            
+            // dev/*: allow any source (unrestricted per your spec)
+            if (target.startsWith('dev/')) {
+              console.log('dev/* target: Any source allowed');
+              return;
+            }
+            
+            // release/*: require dev/* source only
+            if (target.startsWith('release/')) {
+              if (!source.startsWith('dev/')) {
+                core.setFailed(`release/* requires dev/* source. Got: ${source}`);
+              } else {
+                console.log('release/* from dev/*: Valid');
+              }
+              return;
+            }
+            
+            // main: require release/* source only
+            if (target === 'main') {
+              if (!source.startsWith('release/')) {
+                core.setFailed(`main requires release/* source. Got: ${source}`);
+              } else {
+                console.log('main from release/*: Valid');
+              }
+              return;
+            }
+            
+            console.log('Unguarded target branch');

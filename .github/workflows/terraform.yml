@@ -1,0 +1,90 @@
+name: AEO Data Platform CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: terraform-dev
+  cancel-in-progress: true
+
+jobs:
+  terraform-plan:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: '1.9.5'
+    - uses: ./.github/actions/gcp-auth
+      with:
+        credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+    - name: Terraform Plan DEV
+      working-directory: ./infra
+      env:
+        TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID_DEV }}
+        TF_VAR_env: dev
+      run: |
+        terraform init -backend-config=../environments/dev/backend.tf
+        terraform plan -var-file="../environments/dev/terraform.tfvars"
+
+  terraform-apply:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    needs: terraform-plan
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: '1.9.5'
+    - uses: ./.github/actions/gcp-auth
+      with:
+        credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+    - name: Terraform Apply DEV
+      working-directory: ./infra
+      env:
+        TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID_DEV }}
+        TF_VAR_env: dev
+      run: |
+        terraform init -backend-config=../environments/dev/backend.tf
+        terraform apply -auto-approve -var-file="../environments/dev/terraform.tfvars"
+
+  build-templates:
+    runs-on: ubuntu-latest
+    needs: terraform-apply
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: ./.github/actions/gcp-auth
+      with:
+        credentials_json: '${{ secrets.GCP_SA_KEY }}'
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Write GCP credentials
+      run: |
+        echo '${{ secrets.GCP_SA_KEY }}' > ${HOME}/gcp-sa.json
+        echo "GOOGLE_APPLICATION_CREDENTIALS=${HOME}/gcp-sa.json" >> $GITHUB_ENV
+
+    - name: Build & Upload Templates
+      run: |
+        set -e
+        cd pipelines/pos-batch
+        pip install -r requirements.txt
+        python setup.py sdist
+
+        cd ../web-streaming
+        pip install -r requirements.txt
+        python setup.py sdist
