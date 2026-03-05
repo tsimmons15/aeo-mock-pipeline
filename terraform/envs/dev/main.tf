@@ -1,6 +1,6 @@
 terraform {
   backend "gcs" {
-    bucket = "aeo-state-tf-dev"
+    bucket = "aeo-tf-state-dev"
     prefix = "state"
   }
   required_providers {
