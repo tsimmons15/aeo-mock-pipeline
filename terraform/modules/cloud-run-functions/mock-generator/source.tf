@@ -4,6 +4,11 @@ locals {
     ? var.function_source_dir
     : "${path.module}/../../../../app/mock-generator"
   )
+  function_files = sort(fileset(local.function_source_dir, "**"))
+  function_hash  = sha256(join("", [
+    for f in local.function_files :
+    filesha256("${local.function_source_dir}/${f}")
+  ]))
 }
 
 resource "google_storage_bucket" "function_source_bucket" {
@@ -21,7 +26,7 @@ data "archive_file" "function_zip" {
 
 resource "google_storage_bucket_object" "function_zip" {
   bucket = google_storage_bucket.function_source_bucket.name
-  name   = "mock-generator-${data.archive_file.function_zip.output_md5}.zip"
+  name   = "mock-generator-${substr(local.function_hash, 0, 16)}.zip"
   source = data.archive_file.function_zip.output_path
 }
 
