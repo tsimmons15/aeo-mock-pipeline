@@ -27,19 +27,31 @@ variable "raw_bucket_name" {
 }
 
 variable "generator_name" {
-    type = "string"
+    type = string
     default = "aeo-mock-generator"
     description = "The data mock generator name in Cloud Run."
 }
 
 variable "sa_name" {
-    type        = "string"
+    type        = string
     default     = "mock-generator"
     description = "The service account that the Cloud Run function runs as."
 }
 
 variable "function_source_dir" {
     type        = string
-    default     = "${path.module}/../../app/mock-generator"
-    description = "The source directory that contains main.py, requirements.txt"
+    description = "Optional override for the mock-generator source directory."
+    default     = ""
+}
+
+variable "function_name" {
+    type        = string
+#    default     = ""
+    description = "The name the generated cloud run function should have."
+}
+
+variable "function_builder" {
+    type        = string
+#    default     = ""
+    description = "The service account used to build the cloud run function."
 }
