@@ -1,6 +1,8 @@
 # Terraform
 **/.terraform/
 **/.terraform.lock.hcl
+**/terraform.output
+**/.tmp
 *.tfstate
 *.tfstate.*
 .terraform.tfstate.lock.info

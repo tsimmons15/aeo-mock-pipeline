@@ -40,6 +40,18 @@ variable "sa_name" {
 
 variable "function_source_dir" {
     type        = string
-#    default     = "${path.module}/../../app/mock-generator"
-    description = "The source directory that contains main.py, requirements.txt"
+    description = "Optional override for the mock-generator source directory."
+    default     = ""
+}
+
+variable "function_name" {
+    type        = string
+#    default     = ""
+    description = "The name the generated cloud run function should have."
+}
+
+variable "function_builder" {
+    type        = string
+#    default     = ""
+    description = "The service account used to build the cloud run function."
 }
