@@ -1,3 +1,11 @@
+locals {
+  function_source_dir = (
+    var.function_source_dir != ""
+    ? var.function_source_dir
+    : "${path.module}/../../../../app/mock-generator"
+  )
+}
+
 resource "google_storage_bucket" "function_source_bucket" {
   project                     = var.project_id
   name                        = "${var.project_id}-mock-generator-src"
@@ -7,7 +15,7 @@ resource "google_storage_bucket" "function_source_bucket" {
 
 data "archive_file" "function_zip" {
   type        = "zip"
-  source_dir  = var.function_source_dir
+  source_dir  = local.function_source_dir
   output_path = "${path.module}/.tmp/mock-generator.zip"
 }
 
@@ -27,6 +35,7 @@ resource "google_cloudfunctions2_function" "aeo_mock_generator" {
   build_config {
     runtime     = "python311"
     entry_point = "aeo_mock"
+    service_account = "projects/${var.project_id}/serviceAccounts/${var.function_builder}"
 
     source {
       storage_source {

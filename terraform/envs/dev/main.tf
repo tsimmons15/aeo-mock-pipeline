@@ -28,10 +28,13 @@ module "aeo_mock_generator" {
   project_id            = var.project_id
   region                = var.region
   function_name         = var.generator_name
+  function_builder      = var.builder_sa
   sa_name               = var.sa_name
 
   pubsub_topic_id       = module.pubsub.pubsub_topic
   raw_bucket_name       = module.storage.raw_landing_name
+
+  depends_on = [google_project_service.required]
 }
 
 #####################################################################
@@ -44,7 +47,10 @@ module "storage" {
     region = var.region
     storage_class = var.storage_class
     retention_period = var.retention_period
+    dataflow_storage = var.dataflow_storage
     raw_landing_name = var.raw_bucket_name
+
+    depends_on = [google_project_service.required]
 }
 
 #####################################################################
@@ -55,4 +61,6 @@ module "pubsub" {
 
   pubsub_topic_name = var.pubsub_topic_name
   pubsub_subscriber_name = var.pubsub_subscriber_name
+
+  depends_on = [google_project_service.required]
 }

@@ -22,5 +22,5 @@ pubsub_subscriber_name = "aeo-rt-events-sub"
 #####################################################################
 # Mock generator values
 #####################################################################
-generator_name   = "aeo-mock-generator"
-sa_name          = "mock-generator"
+generator_name      = "aeo-mock-generator"
+sa_name             = "mock-generator"
