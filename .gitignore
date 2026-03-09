@@ -1,0 +1,24 @@
+# Terraform
+**/.terraform/
+**/.terraform.lock.hcl
+**/terraform.output
+**/.tmp
+*.tfstate
+*.tfstate.*
+.terraform.tfstate.lock.info
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+dist/
+*.egg-info/
+.env
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/

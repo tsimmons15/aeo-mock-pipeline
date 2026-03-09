@@ -1,0 +1,4 @@
+terraform: "1.9.5"
+python: "3.11"
+beam: "2.59.0"
+airflow: "2.9.0"
