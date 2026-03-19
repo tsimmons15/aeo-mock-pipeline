@@ -1,0 +1,41 @@
+{
+  "name": "aeo-demo-ingestion",
+  "description": "Runs the same Beam pipeline in batch or streaming mode.",
+  "streaming": true,
+  "supportsExactlyOnce": true,
+  "defaultStreamingMode": "EXACTLY_ONCE",
+  "parameters": [
+    {
+      "name": "mode",
+      "label": "Run mode",
+      "helpText": "batch or stream",
+      "regexes": ["^(batch|stream)$"]
+    },
+    {
+      "name": "input_subscription",
+      "label": "Pub/Sub subscription",
+      "helpText": "Required for stream mode",
+      "isOptional": true,
+      "regexes": ["projects/[^/]+/subscriptions/[a-zA-Z][-_.~+%a-zA-Z0-9]{2,}"]
+    },
+    {
+      "name": "input_path",
+      "label": "Batch input path",
+      "helpText": "Required for batch mode",
+      "isOptional": true
+    },
+    {
+      "name": "output_table",
+      "label": "BigQuery output table",
+      "helpText": "Used for stream output",
+      "isOptional": true,
+      "regexes": ["([^:]+:)?[^.]+[.].+"]
+    },
+    {
+      "name": "output_path",
+      "label": "Batch output path",
+      "helpText": "Used for batch output",
+      "isOptional": true
+    }
+  ]
+}

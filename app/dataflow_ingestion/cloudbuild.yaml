@@ -1,0 +1,15 @@
+steps:
+- name: gcr.io/cloud-builders/docker
+  args:
+  - build
+  - -t
+  - us-east1-docker.pkg.dev/aeo-demo-dev/aeo-demo-ingestion/demo-dataflow-ingestion:v${_TS}
+  - .
+
+images:
+- us-east1-docker.pkg.dev/aeo-demo-dev/aeo-demo-ingestion/demo-dataflow-ingestion:v${_TS}
+
+serviceAccount: projects/aeo-demo-dev/serviceAccounts/dataflow-launcher@aeo-demo-dev.iam.gserviceaccount.com
+
+options:
+  logging: CLOUD_LOGGING_ONLY
