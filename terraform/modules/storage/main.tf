@@ -15,8 +15,8 @@ resource "google_storage_bucket" "raw_landing" {
   }
 }
 
-resource "google_storage_bucket" "dataflow_storage" {
-  name     = var.dataflow_storage
+resource "google_storage_bucket" "dataflow_staging" {
+  name     = var.dataflow_staging
   project  = var.project_id
   location = var.region
 
