@@ -22,10 +22,10 @@ variable "retention_period" {
     description = "Soft delete retention period in seconds. 0 disables."
 }
 
-variable "dataflow_storage" {
+variable "dataflow_staging" {
     type = string
 #    default = ""
-    description = "The bucket name associated with the dataflow processing."
+    description = "The bucket name associated with the dataflow staging/templates."
 }
 
 variable "raw_landing_name" {

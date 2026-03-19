@@ -1,5 +1,5 @@
-output "dataflow_storage" {
-  value = google_storage_bucket.dataflow_storage.name
+output "dataflow_staging" {
+  value = google_storage_bucket.dataflow_staging.name
 }
 
 output "raw_landing_name" {
