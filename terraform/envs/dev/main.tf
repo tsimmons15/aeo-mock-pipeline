@@ -1,4 +1,5 @@
 terraform {
+  required_version = ">= 1.6.0"
   backend "gcs" {
     bucket = "aeo-tf-state-dev"
     prefix = "state"
@@ -29,7 +30,7 @@ module "aeo_mock_generator" {
   region                = var.region
   function_name         = var.generator_name
   function_builder      = var.builder_sa
-  sa_name               = var.sa_name
+  sa_name               = var.generator_sa_name
 
   pubsub_topic_id       = module.pubsub.pubsub_topic
   raw_bucket_name       = module.storage.raw_landing_name
@@ -47,7 +48,7 @@ module "storage" {
     region = var.region
     storage_class = var.storage_class
     retention_period = var.retention_period
-    dataflow_storage = var.dataflow_storage
+    dataflow_staging = var.dataflow_staging
     raw_landing_name = var.raw_bucket_name
 
     depends_on = [google_project_service.required]
@@ -63,4 +64,39 @@ module "pubsub" {
   pubsub_subscriber_name = var.pubsub_subscriber_name
 
   depends_on = [google_project_service.required]
+}
+
+#####################################################################
+# The PubSub module to define creating the PubSub topics/subscriptions
+#####################################################################
+module "dataflow" {
+  source = "../../modules/dataflow"
+
+  project_id                = var.project_id
+  region                    = var.region 
+  dataflow_runner_sa_name   = var.dataflow_runner_sa_name
+  dataflow_launcher_sa_name = var.dataflow_launcher_sa_name
+  staging_bucket_name       = module.storage.dataflow_staging
+  ingestion_bucket_name     = module.storage.raw_landing_name
+  pubsub_subscription_name  = module.pubsub.pubsub_ingestion_sub
+  pubsub_topic_name         = module.pubsub.pubsub_topic
+  bigquery_dataset_id       = ""
+}
+
+#####################################################################
+# BigQuery
+#####################################################################
+module "bigquery" {
+  source = "../../modules/bigquery"
+
+  project_id          = var.project_id
+  region              = var.region
+  dataset_id          = var.dataset_id
+  dataset_location    = var.dataset_location
+  environment         = var.environment
+#  human_analyst_group = var.analyst_group
+  runtime_sa_name     = var.runtime_sa_name
+#  deployer_member     = var.bigquery_deployer
+
+  depends_on = [google_project_iam_member.terraform_bigquery_creator]
 }
