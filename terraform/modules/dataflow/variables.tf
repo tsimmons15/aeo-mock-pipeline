@@ -1,7 +1,10 @@
-variable "project_id" { 
-    type        = string
+variable "project" {
+    type = object({
+        id         = string
+        number     = string
+    })
 #    default     = ""
-    description = "The project id this module will be deployed to"
+    description = "A collection of the project details."
 }
 
 variable "region" { 

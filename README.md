@@ -20,5 +20,27 @@ Cloud Composer → Orchestrates batch jobs + monitors streaming
 
 ## Quick Start
 ```bash
-echo "wip"
+# Create the identity
+# Create the Workload Identity Pool
+gcloud iam workload-identity-pools create "github-pool" \
+  --project="aeo-demo-dev" \
+  --location="global" \
+  --display-name="GitHub Actions Pool"
+
+# Create the OIDC provider
+gcloud iam workload-identity-pools providers create-oidc "github-provider" \
+  --project="aeo-demo-dev" \
+  --location="global" \
+  --workload-identity-pool="github-pool" \
+  --display-name="GitHub Provider" \
+  --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository" \
+  --attribute-condition="attribute.repository=='your-org/your-repo'" \
+  --issuer-uri="https://token.actions.githubusercontent.com"
+
+# Allow the pool to impersonate the CI service account
+gcloud iam service-accounts add-iam-policy-binding \
+  "ci-publisher@aeo-demo-dev.iam.gserviceaccount.com" \
+  --project="aeo-demo-dev" \
+  --role="roles/iam.workloadIdentityUser" \
+  --member="principalSet://iam.googleapis.com/projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github-pool/attribute.repository/your-org/your-repo"
 ```
