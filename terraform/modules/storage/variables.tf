@@ -1,7 +1,10 @@
-variable "project_id" {
-    type = string
-#    default = ""
-    description = "The project id to create the storage items in"
+variable "project" {
+    type = object({
+        id         = string
+        number     = string
+    })
+#    default     = ""
+    description = "A collection of the project details."
 }
 
 variable "region" {

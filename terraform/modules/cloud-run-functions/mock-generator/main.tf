@@ -12,8 +12,8 @@ locals {
 }
 
 resource "google_storage_bucket" "function_source_bucket" {
-  project                     = var.project_id
-  name                        = "${var.project_id}-mock-generator-src"
+  project                     = var.project.id
+  name                        = "${var.project.id}-mock-generator-src"
   location                    = var.region
   uniform_bucket_level_access = true
 }
@@ -32,7 +32,7 @@ resource "google_storage_bucket_object" "function_zip" {
 
 resource "google_cloudfunctions2_function" "aeo_mock_generator" {
   provider    = google-beta
-  project     = var.project_id
+  project     = var.project.id
   location    = var.region
   name        = var.generator_name
   description = "AEO mock generator (stream Pub/Sub, batch GCS)"
@@ -40,7 +40,7 @@ resource "google_cloudfunctions2_function" "aeo_mock_generator" {
   build_config {
     runtime     = "python311"
     entry_point = "aeo_mock"
-    service_account = "projects/${var.project_id}/serviceAccounts/${var.function_builder}"
+    service_account = var.bootstrap_sa.name
 
     source {
       storage_source {
@@ -56,7 +56,7 @@ resource "google_cloudfunctions2_function" "aeo_mock_generator" {
     service_account_email = google_service_account.mock_generator.email
 
     environment_variables = {
-      AEO_PROJECT_ID      = var.project_id
+      AEO_PROJECT_ID      = var.project.id
       AEO_PUBSUB_TOPIC_ID = var.pubsub_topic_id
       AEO_RAW_GCS_BUCKET  = var.raw_bucket_name
       AEO_RAW_GCS_PREFIX  = "raw/aeo"
