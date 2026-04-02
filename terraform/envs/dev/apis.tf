@@ -9,6 +9,8 @@ resource "google_project_service" "required" {
     "cloudbuild.googleapis.com",
     "run.googleapis.com",
     "eventarc.googleapis.com",
+    "composer.googleapis.com",
+    "secretmanager.googleapis.com"
   ])
 
   project            = var.project_id

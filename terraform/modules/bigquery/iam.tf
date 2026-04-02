@@ -1,27 +1,41 @@
 resource "google_project_iam_member" "runtime_job_user" {
-  project = var.project_id
+  project = var.project.id
   role    = "roles/bigquery.jobUser"
   member  = "serviceAccount:${google_service_account.runtime.email}"
 }
 
 # Optional, common for readers using Storage Read API / some connectors.
 resource "google_project_iam_member" "runtime_read_session_user" {
-  project = var.project_id
+  project = var.project.id
   role    = "roles/bigquery.readSessionUser"
   member  = "serviceAccount:${google_service_account.runtime.email}"
 }
 
 # Dataset-level: runtime SA can mutate data in this dataset only.
-resource "google_bigquery_dataset_iam_member" "runtime_data_editor" {
-  project    = var.project_id
-  dataset_id = google_bigquery_dataset.warehouse.dataset_id
+resource "google_bigquery_dataset_iam_member" "runtime_raw_data_editor" {
+  project    = var.project.id
+  dataset_id = google_bigquery_dataset.raw_warehouse.dataset_id
+  role       = "roles/bigquery.dataEditor"
+  member     = "serviceAccount:${google_service_account.runtime.email}"
+}
+
+resource "google_bigquery_dataset_iam_member" "runtime_core_data_editor" {
+  project    = var.project.id
+  dataset_id = google_bigquery_dataset.core_warehouse.dataset_id
+  role       = "roles/bigquery.dataEditor"
+  member     = "serviceAccount:${google_service_account.runtime.email}"
+}
+
+resource "google_bigquery_dataset_iam_member" "runtime_analytics_data_editor" {
+  project    = var.project.id
+  dataset_id = google_bigquery_dataset.analytics_warehouse.dataset_id
   role       = "roles/bigquery.dataEditor"
   member     = "serviceAccount:${google_service_account.runtime.email}"
 }
 
 # Dataset-level: analysts can read data in this dataset only.
 #resource "google_bigquery_dataset_iam_member" "analyst_data_viewer" {
-#  project    = var.project_id
+#  project    = var.project.id
 #  dataset_id = google_bigquery_dataset.warehouse.dataset_id
 #  role       = "roles/bigquery.dataViewer"
 #  member     = var.human_analyst_group

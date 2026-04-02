@@ -2,10 +2,14 @@ param(
     [Parameter(Mandatory = $true, Position = 0)]
     [string]$Region,
 
-    [Parameter(Mandatory = $false, Position = 1)]
-    [string]$FlexRS = $null,
+    [Parameter(Mandatory = $true, Position = 1)]
+    [ValidateSet("batch", "streaming")]
+    [string]$PipelineType,
 
     [Parameter(Mandatory = $false, Position = 2)]
+    [string]$FlexRS = $null,
+
+    [Parameter(Mandatory = $false, Position = 3)]
     [string]$WorkerMachineType = "n4-standard-2"
 )
 
@@ -13,56 +17,60 @@ $ErrorActionPreference = "Stop"
 
 # ===== EDIT THESE =====
 $ProjectId           = "aeo-demo-dev"
-$TemplateFileGcsPath = "gs://aeo-dataflow-staging/templates/aeo-ingestion-template/v2/dataflow_template"
 $ServiceAccountEmail = "dataflow-runner@aeo-demo-dev.iam.gserviceaccount.com"
-$Image               = "us-east1-docker.pkg.dev/aeo-demo-dev/aeo-demo-ingestion/demo-dataflow-ingestion:latest"
 
-$MaxWorkers          = 20
-$NumWorkers          = 1
+$TemplateBasePath    = "gs://aeo-dataflow-staging/templates"
 
-$StagingLocation     = "gs://aeo-dataflow-staging"
-$TempLocation        = "gs://aeo-dataflow-staging/tmp"
+# Separate template GCS paths per job type — each pipeline builds its own Flex Template spec
+$TemplateFilePath = @{
+    batch     = "$TemplateBasePath/aeo-batch-ingestion/v2/dataflow_template"
+    streaming = "$TemplateBasePath/aeo-streaming-ingestion/v2/dataflow_template"
+}
 
-# These names must match your Flex Template metadata / pipeline parameters.
-$InputLocation       = "gs://aeo-raw-landing-data/*"
-$OutputLocation      = "gs://aeo-dataflow-staging/output/"
+$MaxWorkers = @{ batch = 20; streaming = 10 }
+$NumWorkers = @{ batch = 4;  streaming = 2  }
 
-# Optional network settings. Leave $null if you do not use them.
-$Network             = $null
-$Subnetwork          = $null
+$StagingLocation = "gs://aeo-dataflow-staging"
+$TempLocation    = "gs://aeo-dataflow-staging/tmp"
 
-# Optional labels.
+$InputLocation  = "gs://aeo-raw-landing-data/*"
+$OutputLocation = "gs://aeo-dataflow-staging/output/"
+
+# Shared library version — used as a label for traceability, not passed to pip (that's in the image)
+$AeoTransformsVersion = "1.0.0"
+
+$Network    = $null
+$Subnetwork = $null
+
 $Labels = @(
     "app=aeo-ingestion",
-    "env=dev"
+    "pipeline-type=$PipelineType",
+    "env=dev",
+    "aeo-transforms-version=$AeoTransformsVersion"
 )
 # ======================
 
 $Timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
-$JobName   = "aeo-ingestion-$Region-$Timestamp"
+$JobName   = "aeo-$PipelineType-ingestion-$Region-$Timestamp"
 
 $Parameters = @(
     "input=$InputLocation",
-    "output=$OutputLocation",
-    "sdk_location=container",
-    "sdk_container_image=$Image"
+    "output=$OutputLocation"
 ) -join ","
 
 $cmd = @(
     "dataflow", "flex-template", "run", $JobName,
     "--project=$ProjectId",
-    "--template-file-gcs-location=$TemplateFileGcsPath",
+    "--template-file-gcs-location=$($TemplateFilePath[$PipelineType])",
     "--region=$Region",
     "--service-account-email=$ServiceAccountEmail",
-    "--num-workers=$NumWorkers",
-    "--max-workers=$MaxWorkers",
-    "--launcher-machine-type=$WorkerMachineType",
+    "--num-workers=$($NumWorkers[$PipelineType])",
+    "--max-workers=$($MaxWorkers[$PipelineType])",
     "--worker-machine-type=$WorkerMachineType",
     "--staging-location=$StagingLocation",
     "--temp-location=$TempLocation",
     "--parameters=$Parameters",
-    "--additional-user-labels=$($Labels -join ',')",
-    "--additional-pipeline-options=$additionalPipelineOptions"
+    "--additional-user-labels=$($Labels -join ',')"
 )
 
 if ($FlexRS) {
@@ -77,11 +85,11 @@ if ($Subnetwork) {
     $cmd += "--subnetwork=$Subnetwork"
 }
 
-Write-Host "Launching job: $JobName"
+Write-Host "Launching $PipelineType job: $JobName"
 Write-Host "Region: $Region"
-Write-Host "Worker machine type: $WorkerMachineType"
-if ($FlexRS) {
-    Write-Host "Using FlexRS: $FlexRS"
-}
+Write-Host "Template: $($TemplateFilePath[$PipelineType])"
+Write-Host "Workers: $($NumWorkers[$PipelineType]) initial / $($MaxWorkers[$PipelineType]) max"
+Write-Host "Machine type: $WorkerMachineType"
+if ($FlexRS) { Write-Host "FlexRS: $FlexRS" }
 
 & gcloud @cmd

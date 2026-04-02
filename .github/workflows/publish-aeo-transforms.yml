@@ -1,0 +1,104 @@
+name: Publish aeo-transforms
+
+on:
+  push:
+    tags:
+      - "transforms/v*"        # trigger only on tags like transforms/v1.0.0
+  workflow_dispatch:            # allow manual trigger for the demo
+
+permissions:
+  contents: read
+  id-token: write               # required for Workload Identity Federation
+
+env:
+  PROJECT_ID:      aeo-demo-dev
+  REGION:          us-east1
+  AR_REPO:         aeo-python-repo
+  PYTHON_VERSION:  "3.11"
+  CICD_PROVIDER:   "github-provider"
+  CICD_POOL:       "cicd-deploy-pool"
+
+jobs:
+  test:
+    name: Test aeo-transforms
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dataflow_ingestion/transformations
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install package and dev deps
+        run: |
+          pip install -c ../constraints.txt -e ".[dev]"
+
+      - name: Run tests
+        run: |
+          pytest aeo_transforms/tests/ -v --tb=short
+
+  build:
+    name: Build sdist
+    needs: test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dataflow_ingestion/transformations
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Build source distribution
+        run: |
+          pip install build
+          python -m build --sdist
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: aeo-transforms-dist
+          path: dataflow_ingestion/transformations/dist/*.tar.gz
+          retention-days: 7
+
+  publish:
+    name: Publish to Artifact Registry
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Authenticate to GCP via Workload Identity Federation
+        uses: google-github-actions/auth@v1
+        with:
+          workload_identity_provider: "projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/${{ env.CICD_POOL }}/providers/${{ env.CICD_PROVIDER }}"
+          service_account: "cicd-runner@${{ env.PROJECT_ID }}.iam.gserviceaccount.com"
+
+      - name: Download dist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: aeo-transforms-dist
+          path: dist/
+
+      - name: Install twine and AR keyring backend
+        run: |
+          pip install twine keyrings.google-artifactregistry-auth
+
+      - name: Publish to Artifact Registry
+        run: |
+          twine upload \
+            --repository-url "https://${{ env.REGION }}-python.pkg.dev/${{ env.PROJECT_ID }}/${{ env.AR_REPO }}/" \
+            --skip-existing \
+            dist/*.tar.gz
