@@ -17,6 +17,7 @@ env:
   PYTHON_VERSION:  "3.10"
   CICD_PROVIDER:   "github-provider"
   CICD_POOL:       "cicd-deploy-pool"
+  WORKING_DIR:     "app/dataflow_ingestion/transformations"
 
 jobs:
   test:
@@ -24,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: dataflow_ingestion/transformations
+        working-directory: ${{ env.WORKING_DIR }}
 
     steps:
       - uses: actions/checkout@v3
@@ -39,7 +40,7 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest aeo_transforms/tests/ -v --tb=short
+          pytest ./tests/ -v --tb=short
 
   build:
     name: Build sdist
@@ -47,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: dataflow_ingestion/transformations
+        working-directory: ${{ env.WORKING_DIR }}
 
     steps:
       - uses: actions/checkout@v3
@@ -55,6 +56,10 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Build dist directory
+        run: |
+          mkdir -p ${{ env.WORKING_DIR }}/dist
 
       - name: Build source distribution
         run: |
@@ -65,8 +70,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: aeo-transforms-dist
-          path: dataflow_ingestion/transformations/dist/*.tar.gz
-          retention-days: 7
+          path: ${{ env.WORKING_DIR }}/dist/*.tar.gz
+          retention-days: 1
 
   publish:
     name: Publish to Artifact Registry
@@ -90,7 +95,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: aeo-transforms-dist
-          path: dist/
+          path: ${{ env.WORKING_DIR }}/dist/
 
       - name: Install twine and AR keyring backend
         run: |
