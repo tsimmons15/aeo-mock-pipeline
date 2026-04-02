@@ -1,6 +1,6 @@
 resource "google_storage_bucket" "raw_landing" {
   name     = var.raw_landing_name
-  project  = var.project_id
+  project  = var.project.id
   location = var.region
 
   storage_class = var.storage_class
@@ -17,7 +17,7 @@ resource "google_storage_bucket" "raw_landing" {
 
 resource "google_storage_bucket" "dataflow_staging" {
   name     = var.dataflow_staging
-  project  = var.project_id
+  project  = var.project.id
   location = var.region
 
   storage_class = var.storage_class

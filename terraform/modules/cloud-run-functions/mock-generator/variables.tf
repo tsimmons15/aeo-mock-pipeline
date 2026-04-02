@@ -2,10 +2,13 @@
 # Mock Generator Inputs
 #####################################################################
 
-variable "project_id"      { 
-    type        = string
+variable "project" {
+    type = object({
+        id         = string
+        number     = string
+    })
 #    default     = ""
-    description = "The project id this module will be deployed to"
+    description = "A collection of the project details."
 }
 
 variable "region"          { 
@@ -50,8 +53,13 @@ variable "function_name" {
     description = "The name the generated cloud run function should have."
 }
 
-variable "function_builder" {
-    type        = string
+variable "bootstrap_sa" {
+    type        = object({
+        account_id = string
+        name       = string
+        email      = string
+        unique_id  = string
+    })
 #    default     = ""
-    description = "The service account used to build the cloud run function."
+    description = "The details for the bootstrap service account."
 }
