@@ -14,7 +14,7 @@ env:
   PROJECT_ID:      aeo-demo-dev
   REGION:          us-east1
   AR_REPO:         aeo-python-repo
-  PYTHON_VERSION:  "3.10"
+  PYTHON_VERSION:  "3.11"
   CICD_PROVIDER:   "github-provider"
   CICD_POOL:       "cicd-deploy-pool"
 
