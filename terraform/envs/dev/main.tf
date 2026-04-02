@@ -17,7 +17,64 @@ terraform {
       source  = "hashicorp/archive"
       version = ">= 2.0"
     }
+    null = {
+      source = "hashicorp/null"
+      version = ">= 3.0"
+    }
   }
+}
+
+#####################################################################
+# Get the project information, so we only need to worry about the project_id
+#####################################################################
+data "google_project" "project" {
+  project_id = var.project_id
+}
+
+#####################################################################
+# Possibly superficial locals to package bootstrap information
+# into a nice package
+#####################################################################
+locals {
+  project = {
+    id     = var.project_id
+    number = data.google_project.project.number
+  }
+  bootstrap_sa = {
+    account_id = var.bootstrap_sa_name
+    name       = data.google_service_account.bootstrap.name
+    email      = data.google_service_account.bootstrap.email
+    unique_id  = data.google_service_account.bootstrap.unique_id
+  }
+  cicd_sa = {
+    account_id = var.cicd_sa_name
+    name       = resource.google_service_account.cicd_runner.name
+    email      = resource.google_service_account.cicd_runner.email
+    unique_id  = resource.google_service_account.cicd_runner.unique_id
+  }
+  python = {
+    version = var.python_version
+    packages = var.pypi_packages
+  }
+  env_variables = merge(var.env_variables, { ENV = var.environment })
+  labels = merge(var.labels, { env = var.environment })
+}
+
+#####################################################################
+# Artifact Repository
+#####################################################################
+module "artifact-repository" {
+  source = "../../modules/artifact-repository/"
+
+  # The variables expected by the module
+  project          = local.project
+  region           = var.region
+  python           = local.python
+  github_org       = var.github_org
+  github_repo      = var.github_repo
+  cicd_runner      = local.cicd_sa
+  cicd_workload_id = var.cicd_workload_id
+  repository_id    = var.repository_id
 }
 
 #####################################################################
@@ -26,10 +83,10 @@ terraform {
 module "aeo_mock_generator" {
   source = "../../modules/cloud-run-functions/mock-generator"
   # The variables defined in the modules/cloud-run-functions/mock-generator module
-  project_id            = var.project_id
+  project               = local.project
   region                = var.region
   function_name         = var.generator_name
-  function_builder      = var.builder_sa
+  bootstrap_sa          = local.bootstrap_sa
   sa_name               = var.generator_sa_name
 
   pubsub_topic_id       = module.pubsub.pubsub_topic
@@ -44,9 +101,9 @@ module "aeo_mock_generator" {
 module "storage" {
     source = "../../modules/storage/"
 
-    project_id = var.project_id
-    region = var.region
-    storage_class = var.storage_class
+    project          = local.project
+    region           = var.region
+    storage_class    = var.storage_class
     retention_period = var.retention_period
     dataflow_staging = var.dataflow_staging
     raw_landing_name = var.raw_bucket_name
@@ -60,7 +117,7 @@ module "storage" {
 module "pubsub" {
   source = "../../modules/pubsub"
 
-  pubsub_topic_name = var.pubsub_topic_name
+  pubsub_topic_name      = var.pubsub_topic_name
   pubsub_subscriber_name = var.pubsub_subscriber_name
 
   depends_on = [google_project_service.required]
@@ -72,7 +129,7 @@ module "pubsub" {
 module "dataflow" {
   source = "../../modules/dataflow"
 
-  project_id                = var.project_id
+  project                   = local.project
   region                    = var.region 
   dataflow_runner_sa_name   = var.dataflow_runner_sa_name
   dataflow_launcher_sa_name = var.dataflow_launcher_sa_name
@@ -81,6 +138,8 @@ module "dataflow" {
   pubsub_subscription_name  = module.pubsub.pubsub_ingestion_sub
   pubsub_topic_name         = module.pubsub.pubsub_topic
   bigquery_dataset_id       = ""
+
+  depends_on = [google_project_service.required]
 }
 
 #####################################################################
@@ -89,14 +148,40 @@ module "dataflow" {
 module "bigquery" {
   source = "../../modules/bigquery"
 
-  project_id          = var.project_id
-  region              = var.region
-  dataset_id          = var.dataset_id
-  dataset_location    = var.dataset_location
-  environment         = var.environment
-#  human_analyst_group = var.analyst_group
-  runtime_sa_name     = var.runtime_sa_name
-#  deployer_member     = var.bigquery_deployer
+  project                   = local.project
+  region                    = var.region
+  dataset_location          = var.dataset_location
+  environment               = var.environment
+#  human_analyst_group      = var.analyst_group
+  runtime_sa_name           = var.runtime_sa_name
+#  deployer_member          = var.bigquery_deployer
 
-  depends_on = [google_project_iam_member.terraform_bigquery_creator]
+  raw_dataset_id            = var.raw_dataset_id
+  core_dataset_id           = var.core_dataset_id
+  analytics_mart_dataset_id = var.analytics_dataset_id
+
+  depends_on = [
+    google_project_iam_member.terraform_bigquery_creator, 
+    google_project_service.required
+  ]
 }
+
+#####################################################################
+# Composer
+#####################################################################
+#module "composer" {
+#  source = "../../modules/composer"
+#
+#  project               = local.project
+#  region                   = var.region
+#  composer_env_name        = var.composer_env_name
+#  bootstrap_sa             = local.bootstrap_sa
+#  composer_sa_name         = var.composer_sa_name
+#  image_version            = var.image_version
+#  python                   = local.python
+#  env_variables            = local.env_variables
+#  airflow_config_overrides = var.airflow_config_overrides
+#  labels                   = local.labels
+#
+#  depends_on = [google_project_service.required]
+#}
