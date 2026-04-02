@@ -1,5 +1,10 @@
-variable "project_id" {
-  type = string
+variable "project" {
+    type = object({
+        id         = string
+        number     = string
+    })
+#    default     = ""
+    description = "A collection of the project details."
 }
 
 variable "region" {
@@ -7,7 +12,17 @@ variable "region" {
   default = "us-central1"
 }
 
-variable "dataset_id" {
+variable "raw_dataset_id" {
+  type    = string
+  default = "analytics_wh"
+}
+
+variable "core_dataset_id" {
+  type    = string
+  default = "analytics_wh"
+}
+
+variable "analytics_mart_dataset_id" {
   type    = string
   default = "analytics_wh"
 }
