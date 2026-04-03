@@ -17,6 +17,15 @@ variable "environment" {
   description = ""
 }
 
+#####################################################################
+# Bootstrap variables
+#####################################################################
+variable "builder_sa" {
+  type        = string
+#  default     = ""
+  description = ""
+}
+
 variable "cicd_sa_name" {
   type        = string
 #  default     = ""
@@ -132,6 +141,12 @@ variable "dataflow_launcher_sa_name" {
 #####################################################################
 # BigQuery
 #####################################################################
+variable "dataset_id" {
+  type        = string
+#  default     = ""
+  description = ""
+}
+
 variable "dataset_location" {
   type        = string
 #  default     = ""
