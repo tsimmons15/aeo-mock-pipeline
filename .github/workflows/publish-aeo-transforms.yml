@@ -34,6 +34,9 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
+      - name: Guarantee setuptools
+        run: pip install --upgrade setuptools pip wheel
+
       - name: Install package and dev deps
         run: |
           pip install -c ../constraints.txt -e ".[dev]"
@@ -105,5 +108,4 @@ jobs:
         run: |
           twine upload \
             --repository-url "https://${{ env.REGION }}-python.pkg.dev/${{ env.PROJECT_ID }}/${{ env.AR_REPO }}/" \
-            --skip-existing \
             dist/*.tar.gz
