@@ -87,9 +87,25 @@ variable "pubsub_topic_name" {
   description = "The Pub/Sub topic name."
 }
 
-variable "pubsub_subscriber_name" {
+variable "pubsub_browse_event_subscription" {
   type        = string
-  description = "The Pub/Sub subscription name."
+  description = "The Pub/Sub browse event subscription name."
+}
+variable "pubsub_cart_event_subscription" {
+  type        = string
+  description = "The Pub/Sub cart event subscription name."
+}
+variable "pubsub_commerce_event_subscription" {
+  type        = string
+  description = "The Pub/Sub commerce event subscription name."
+}
+variable "pubsub_return_event_subscription" {
+  type        = string
+  description = "The Pub/Sub return event subscription name."
+}
+variable "pubsub_inventory_event_subscription" {
+  type        = string
+  description = "The Pub/Sub inventory event subscription name."
 }
 
 #####################################################################
@@ -144,19 +160,55 @@ variable "runtime_sa_name" {
   description = ""
 }
 
-variable "raw_dataset_id" {
+variable "staging_dataset" {
   type        = string
 #  default     = ""
   description = ""
 }
 
-variable "core_dataset_id" {
+variable "core_dataset" {
   type        = string
 #  default     = ""
   description = ""
 }
 
-variable "analytics_dataset_id" {
+variable "merchandising_mart" {
+  type        = string
+#  default     = ""
+  description = ""
+}
+
+variable "demography_mart" {
+  type        = string
+#  default     = ""
+  description = ""
+}
+
+variable "data_quality_results" {
+  type        = string
+#  default     = ""
+  description = ""
+}
+
+variable "stg_orders" {
+  type        = string
+#  default     = ""
+  description = ""
+}
+
+variable "stg_returns" {
+  type        = string
+#  default     = ""
+  description = ""
+}
+
+variable "stg_inventory_snapshots" {
+  type        = string
+#  default     = ""
+  description = ""
+}
+
+variable "stg_product" {
   type        = string
 #  default     = ""
   description = ""

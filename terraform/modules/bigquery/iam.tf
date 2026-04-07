@@ -11,24 +11,37 @@ resource "google_project_iam_member" "runtime_read_session_user" {
   member  = "serviceAccount:${google_service_account.runtime.email}"
 }
 
-# Dataset-level: runtime SA can mutate data in this dataset only.
-resource "google_bigquery_dataset_iam_member" "runtime_raw_data_editor" {
+resource "google_bigquery_dataset_iam_member" "runtime_staging_data_editor" {
   project    = var.project.id
-  dataset_id = google_bigquery_dataset.raw_warehouse.dataset_id
+  dataset_id = google_bigquery_dataset.retail_staging.dataset_id
   role       = "roles/bigquery.dataEditor"
   member     = "serviceAccount:${google_service_account.runtime.email}"
 }
 
-resource "google_bigquery_dataset_iam_member" "runtime_core_data_editor" {
+resource "google_bigquery_dataset_iam_member" "runtime_retail_data_editor" {
   project    = var.project.id
-  dataset_id = google_bigquery_dataset.core_warehouse.dataset_id
+  dataset_id = google_bigquery_dataset.retail.dataset_id
   role       = "roles/bigquery.dataEditor"
   member     = "serviceAccount:${google_service_account.runtime.email}"
 }
 
-resource "google_bigquery_dataset_iam_member" "runtime_analytics_data_editor" {
+resource "google_bigquery_dataset_iam_member" "runtime_merchandising_data_editor" {
   project    = var.project.id
-  dataset_id = google_bigquery_dataset.analytics_warehouse.dataset_id
+  dataset_id = google_bigquery_dataset.retail_mart_merchandising.dataset_id
+  role       = "roles/bigquery.dataEditor"
+  member     = "serviceAccount:${google_service_account.runtime.email}"
+}
+
+resource "google_bigquery_dataset_iam_member" "runtime_customer_data_editor" {
+  project    = var.project.id
+  dataset_id = google_bigquery_dataset.retail_mart_customer_demography.dataset_id
+  role       = "roles/bigquery.dataEditor"
+  member     = "serviceAccount:${google_service_account.runtime.email}"
+}
+
+resource "google_bigquery_dataset_iam_member" "runtime_data_quality_data_editor" {
+  project    = var.project.id
+  dataset_id = google_bigquery_dataset.retail_data_quality.dataset_id
   role       = "roles/bigquery.dataEditor"
   member     = "serviceAccount:${google_service_account.runtime.email}"
 }

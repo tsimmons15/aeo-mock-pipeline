@@ -57,7 +57,7 @@ resource "google_cloudfunctions2_function" "aeo_mock_generator" {
 
     environment_variables = {
       AEO_PROJECT_ID      = var.project.id
-      AEO_PUBSUB_TOPIC_ID = var.pubsub_topic_id
+      AEO_PUBSUB_TOPIC_ID = var.pubsub_details.topic_id
       AEO_RAW_GCS_BUCKET  = var.raw_bucket_name
       AEO_RAW_GCS_PREFIX  = "raw/aeo"
       AEO_BATCH_GZIP      = "true"

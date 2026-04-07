@@ -37,20 +37,28 @@ variable "ingestion_bucket_name" {
     description = "The raw bucket for the batch dataflow ingestion to pull from"
 }
 
-variable "pubsub_subscription_name" {
-    type        = string
+variable "pubsub_details" { 
+    type        = object({
+        topic_name      = string
+        topic_id        = string
+        browse_event    = string
+        cart_event      = string
+        commerce_event  = string
+        return_event    = string
+        inventory_event = string
+    })
 #    default     = ""
-    description = "The pubsub subscription name for the dataflow ingestion to pull from"
+    description = "The pubsub details including the details this module is supposed to read from"
 }
 
-variable "pubsub_topic_name" {
-    type        = string
+variable "bigquery_datasets" {
+    type = object({
+        retail_staging     = string
+        core_retail        = string
+        merchandising_mart = string
+        demography_mart    = string
+        data_quality       = string
+    })
 #    default     = ""
-    description = "The pubsub topic name for the dataflow ingestion to pull from"
-}
-
-variable "bigquery_dataset_id" {
-    type        = string
-    default     = ""
-    description = ""
+    description = "A collection of the bigquery datasets."
 }

@@ -17,10 +17,18 @@ variable "region"          {
     description = "The region this module will be deployed to"
 }
 
-variable "pubsub_topic_id" { 
-    type        = string
-    default     = "aeo-rt-events"
-    description = "The pubsub topic this module is supposed to publish to"
+variable "pubsub_details" { 
+    type        = object({
+        topic_name      = string
+        topic_id        = string
+        browse_event    = string
+        cart_event      = string
+        commerce_event  = string
+        return_event    = string
+        inventory_event = string
+    })
+#    default     = ""
+    description = "The pubsub details including the details this module is supposed to publish to"
 }
 
 variable "raw_bucket_name" { 

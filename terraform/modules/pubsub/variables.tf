@@ -1,11 +1,12 @@
-variable "pubsub_topic_name" {
-    type = string
-#    default = ""
-    description = "The topic name for the ingestion pubsub"
-}
-
-variable "pubsub_subscriber_name" {
-    type = string
-#    default = ""
-    description = "The subscriber name for the ingestion pubsub topic"
+variable "pubsub_details" { 
+    type        = object({
+        topic_name      = string
+        browse_event    = string
+        cart_event      = string
+        commerce_event  = string
+        return_event    = string
+        inventory_event = string
+    })
+#    default     = ""
+    description = "The pubsub details to be stood up"
 }

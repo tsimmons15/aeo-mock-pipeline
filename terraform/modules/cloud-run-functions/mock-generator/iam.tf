@@ -1,6 +1,6 @@
 resource "google_pubsub_topic_iam_member" "mock_generator_publisher" {
   project = var.project.id
-  topic   = var.pubsub_topic_id
+  topic   = var.pubsub_details.topic_id
   role    = "roles/pubsub.publisher"
   member  = "serviceAccount:${google_service_account.mock_generator.email}"
 }

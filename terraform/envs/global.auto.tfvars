@@ -16,8 +16,13 @@ retention_period       = 0 # Disables soft delete
 # PubSub related values
 #####################################################################
 # Used for Mock generator
-pubsub_topic_name      = "aeo-rt-events"
-pubsub_subscriber_name = "aeo-rt-events-sub"
+pubsub_topic_name                   = "aeo-rt-events"
+#pubsub_subscriber_name             = "aeo-rt-events-sub"
+pubsub_browse_event_subscription    = "aeo-events-browse-sub"
+pubsub_cart_event_subscription      = "aeo-events-cart-sub"
+pubsub_commerce_event_subscription  = "aeo-events-commerce-sub"
+pubsub_return_event_subscription    = "aeo-events-returns-sub"
+pubsub_inventory_event_subscription = "aeo-events-inventory-sub"
 
 
 #####################################################################
@@ -37,12 +42,19 @@ dataflow_launcher_sa_name     = "dataflow-launcher"
 #####################################################################
 # BigQuery values
 #####################################################################
-raw_dataset_id          = "aeo_demo_raw"
-core_dataset_id         = "aeo_demo_core"
-analytics_dataset_id    = "aeo_demo_analytics_mart"
-dataset_location    = "US"
-#human_analyst_group = 
-runtime_sa_name     = "bigquery-runner"
+staging_dataset         = "retail_staging"
+core_dataset            = "retail"
+merchandising_mart      = "retail_mart_merchandising"
+demography_mart         = "retail_mart_customer_demography"
+data_quality_results    = "retail_data_quality"
+stg_orders              = "stg_orders"
+stg_returns             = "stg_returns"
+stg_inventory_snapshots = "stg_inventory_snapshots"
+stg_product             = "stg_product"
+dataset_location        = "US"
+#human_analyst_group    = 
+runtime_sa_name         = "bigquery-runner"
+
 
 #####################################################################
 # Composer values

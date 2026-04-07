@@ -32,35 +32,6 @@ data "google_project" "project" {
 }
 
 #####################################################################
-# Possibly superficial locals to package bootstrap information
-# into a nice package
-#####################################################################
-locals {
-  project = {
-    id     = var.project_id
-    number = data.google_project.project.number
-  }
-  bootstrap_sa = {
-    account_id = var.bootstrap_sa_name
-    name       = data.google_service_account.bootstrap.name
-    email      = data.google_service_account.bootstrap.email
-    unique_id  = data.google_service_account.bootstrap.unique_id
-  }
-  cicd_sa = {
-    account_id = var.cicd_sa_name
-    name       = resource.google_service_account.cicd_runner.name
-    email      = resource.google_service_account.cicd_runner.email
-    unique_id  = resource.google_service_account.cicd_runner.unique_id
-  }
-  python = {
-    version = var.python_version
-    packages = var.pypi_packages
-  }
-  env_variables = merge(var.env_variables, { ENV = var.environment })
-  labels = merge(var.labels, { env = var.environment })
-}
-
-#####################################################################
 # Artifact Repository
 #####################################################################
 module "artifact-repository" {
@@ -89,7 +60,7 @@ module "aeo_mock_generator" {
   bootstrap_sa          = local.bootstrap_sa
   sa_name               = var.generator_sa_name
 
-  pubsub_topic_id       = module.pubsub.pubsub_topic
+  pubsub_details       = local.pubsub_details_final
   raw_bucket_name       = module.storage.raw_landing_name
 
   depends_on = [google_project_service.required]
@@ -117,14 +88,13 @@ module "storage" {
 module "pubsub" {
   source = "../../modules/pubsub"
 
-  pubsub_topic_name      = var.pubsub_topic_name
-  pubsub_subscriber_name = var.pubsub_subscriber_name
+  pubsub_details = local.pubsub_details
 
   depends_on = [google_project_service.required]
 }
 
 #####################################################################
-# The PubSub module to define creating the PubSub topics/subscriptions
+# The Dataflow module to define creating the ingestion mechanism
 #####################################################################
 module "dataflow" {
   source = "../../modules/dataflow"
@@ -135,9 +105,8 @@ module "dataflow" {
   dataflow_launcher_sa_name = var.dataflow_launcher_sa_name
   staging_bucket_name       = module.storage.dataflow_staging
   ingestion_bucket_name     = module.storage.raw_landing_name
-  pubsub_subscription_name  = module.pubsub.pubsub_ingestion_sub
-  pubsub_topic_name         = module.pubsub.pubsub_topic
-  bigquery_dataset_id       = ""
+  pubsub_details            = local.pubsub_details_final
+  bigquery_datasets         = local.bigquery_details
 
   depends_on = [google_project_service.required]
 }
@@ -150,15 +119,12 @@ module "bigquery" {
 
   project                   = local.project
   region                    = var.region
-  dataset_location          = var.dataset_location
   environment               = var.environment
 #  human_analyst_group      = var.analyst_group
   runtime_sa_name           = var.runtime_sa_name
 #  deployer_member          = var.bigquery_deployer
 
-  raw_dataset_id            = var.raw_dataset_id
-  core_dataset_id           = var.core_dataset_id
-  analytics_mart_dataset_id = var.analytics_dataset_id
+  bigquery_details = local.bigquery_bootstrap
 
   depends_on = [
     google_project_iam_member.terraform_bigquery_creator, 

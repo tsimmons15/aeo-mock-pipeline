@@ -12,31 +12,14 @@ variable "region" {
   default = "us-central1"
 }
 
-variable "raw_dataset_id" {
-  type    = string
-  default = "analytics_wh"
-}
-
-variable "core_dataset_id" {
-  type    = string
-  default = "analytics_wh"
-}
-
-variable "analytics_mart_dataset_id" {
-  type    = string
-  default = "analytics_wh"
-}
-
-variable "dataset_location" {
-  type    = string
-  default = "US"
-}
-
 variable "environment" {
   type    = string
   default = "dev"
 }
 
+#####################################################################
+# IAM group definitions
+#####################################################################
 #variable "human_analyst_group" {
 #  type        = string
 #  description = "Example: group:analytics@example.com"
@@ -51,3 +34,27 @@ variable "runtime_sa_name" {
 #  type        = string
 #  description = "Example: user:you@example.com or serviceAccount:terraform@project.iam.gserviceaccount.com"
 #}
+
+
+
+#####################################################################
+# BigQuery variables
+#####################################################################
+variable "bigquery_details" {
+  type = object({
+    location                     = string
+    bigquery_dataset_bootstrap = object({
+      retail_staging             = string
+      core_retail                = string
+      merchandising_mart         = string
+      demography_mart            = string
+      data_quality               = string
+    })
+    bigquery_table_bootstrap = object({
+      stg_orders_id              = string
+      stg_returns_id             = string
+      stg_inventory_snapshots_id = string
+      stg_product_id             = string
+    })
+  })
+}

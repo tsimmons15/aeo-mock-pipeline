@@ -42,24 +42,43 @@ _BATCH_REQUIRED = {
 
 
 class ValidateEventSchema(beam.DoFn):
-    """Streaming: validate base fields and event-type-conditional fields."""
+    """Streaming: validate base fields and event-type-conditional fields.
+
+    Args:
+        valid_event_types: If provided, events whose event_type is not in this
+                           set are routed to dead letter. Allows each per-group
+                           job to reject events that leaked past the PubSub
+                           subscription filter.
+    """
+
+    def __init__(self, valid_event_types: set = None):
+        self._valid_event_types = valid_event_types
 
     def process(self, record):
         missing = _STREAM_BASE_REQUIRED - record.keys()
         if missing:
             yield beam.pvalue.TaggedOutput("dead", {
-                "raw": record,
+                "raw":   record,
                 "error": f"Missing base fields: {missing}",
                 "stage": "validate",
             })
             return
 
         event_type = record.get("event_type")
+
+        if self._valid_event_types and event_type not in self._valid_event_types:
+            yield beam.pvalue.TaggedOutput("dead", {
+                "raw":   record,
+                "error": f"Unexpected event_type '{event_type}' for this job",
+                "stage": "validate",
+            })
+            return
+
         extra_required = _STREAM_EVENT_REQUIRED.get(event_type, set())
         missing_extra = extra_required - record.keys()
         if missing_extra:
             yield beam.pvalue.TaggedOutput("dead", {
-                "raw": record,
+                "raw":   record,
                 "error": f"Missing fields for {event_type}: {missing_extra}",
                 "stage": "validate",
             })
